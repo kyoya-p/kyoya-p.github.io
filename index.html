@@ -1,14 +1,41 @@
 <!DOCTYPE html>
-<html lang="ja">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Github Pages公開練習</title>
+    <title>Markdown to HTML</title>
 </head>
-
 <body>
-    <h1>こんにちは</h1>
-</body>
 
+<div id="markdown-container">
+    <script type="text/markdown">
+        # これは見出しです
+
+        これは**太字**と*イタリック*のテキストです。
+
+        - リスト1
+        - リスト2
+
+        [リンク](https://example.com)
+    </script>
+</div>
+
+<div id="output-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+<script>
+    // ページが読み込まれた後に実行
+    document.addEventListener('DOMContentLoaded', () => {
+      // <script type="text/markdown"> の内容を取得
+      const markdownElement = document.querySelector('script[type="text/markdown"]');
+      const markdownText = markdownElement.textContent;
+
+      // MarkdownをHTMLに変換
+      const htmlOutput = marked.parse(markdownText);
+
+      // 変換したHTMLを<div>に挿入
+      const outputContainer = document.getElementById('output-container');
+      outputContainer.innerHTML = htmlOutput;
+    });
+</script>
+
+</body>
 </html>
