@@ -1,5 +1,4 @@
-var doc =(function(){
-/*
+const md="
 # 表題
 テスト Markdown ドキュメント
 
@@ -17,5 +16,4 @@ var doc =(function(){
 
 - コンバータがないとプレビューできない
 - 表記法が統一されていない
-
-*/}.toString().match(/[^function\s\(\s\)\s{\s\/\*][\s\S]*[^\s\*\/}]/g).join("\n"));
+"
