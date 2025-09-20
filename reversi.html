@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>オセロ - プレイヤー vs CPU</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+    h1 {
+      margin: 10px 0;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      grid-template-rows: repeat(8, 50px);
+      gap: 2px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: #2e8b57;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    .black {
+      width: 40px;
+      height: 40px;
+      background: black;
+      border-radius: 50%;
+    }
+    .white {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>オセロゲーム - プレイヤー vs CPU</h1>
+  <div id="status">黒（あなた）の番です</div>
+  <div id="board"></div>
+
+  <script>
+    const boardSize = 8;
+    const board = [];
+    let currentPlayer = 'black';
+
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [ 0, -1],          [ 0, 1],
+      [ 1, -1], [ 1, 0], [ 1, 1]
+    ];
+
+    function initBoard() {
+      const boardElem = document.getElementById('board');
+      boardElem.innerHTML = '';
+      for (let y = 0; y < boardSize; y++) {
+        board[y] = [];
+        for (let x = 0; x < boardSize; x++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+          cell.addEventListener('click', handleClick);
+          boardElem.appendChild(cell);
+          board[y][x] = null;
+        }
+      }
+      // 初期配置
+      board[3][3] = 'white';
+      board[4][4] = 'white';
+      board[3][4] = 'black';
+      board[4][3] = 'black';
+      updateBoard();
+    }
+
+    function updateBoard() {
+      for (let y = 0; y < boardSize; y++) {
+        for (let x = 0; x < boardSize; x++) {
+          const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+          cell.innerHTML = '';
+          if (board[y][x]) {
+            const stone = document.createElement('div');
+            stone.classList.add(board[y][x]);
+            cell.appendChild(stone);
+          }
+        }
+      }
+    }
+
+    function isValidMove(x, y, color) {
+      if (board[y][x]) return false;
+      const opponent = color === 'black' ? 'white' : 'black';
+
+      for (const [dx, dy] of directions) {
+        let nx = x + dx;
+        let ny = y + dy;
+        let hasOpponent = false;
+
+        while (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+          if (board[ny][nx] === opponent) {
+            hasOpponent = true;
+          } else if (board[ny][nx] === color && hasOpponent) {
+            return true;
+          } else {
+            break;
+          }
+          nx += dx;
+          ny += dy;
+        }
+      }
+      return false;
+    }
+
+    function getValidMoves(color) {
+      const moves = [];
+      for (let y = 0; y < boardSize; y++) {
+        for (let x = 0; x < boardSize; x++) {
+          if (isValidMove(x, y, color)) {
+            moves.push({x, y});
+          }
+        }
+      }
+      return moves;
+    }
+
+    function flipStones(x, y, color) {
+      const opponent = color === 'black' ? 'white' : 'black';
+
+      for (const [dx, dy] of directions) {
+        let nx = x + dx;
+        let ny = y + dy;
+        const toFlip = [];
+
+        while (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+          if (board[ny][nx] === opponent) {
+            toFlip.push([nx, ny]);
+          } else if (board[ny][nx] === color) {
+            for (const [fx, fy] of toFlip) {
+              board[fy][fx] = color;
+            }
+            break;
+          } else {
+            break;
+          }
+          nx += dx;
+          ny += dy;
+        }
+      }
+    }
+
+    function makeMove(x, y, color) {
+      board[y][x] = color;
+      flipStones(x, y, color);
+      updateBoard();
+    }
+
+    function handleClick(e) {
+      if (currentPlayer !== 'black') return;
+
+      const x = parseInt(e.currentTarget.dataset.x);
+      const y = parseInt(e.currentTarget.dataset.y);
+
+      if (!isValidMove(x, y, currentPlayer)) return;
+
+      makeMove(x, y, currentPlayer);
+      currentPlayer = 'white';
+      updateStatus();
+
+      setTimeout(cpuMove, 500);
+    }
+
+    function cpuMove() {
+      const moves = getValidMoves('white');
+      if (moves.length === 0) {
+        currentPlayer = 'black';
+        updateStatus();
+        return;
+      }
+
+      const move = moves[Math.floor(Math.random() * moves.length)];
+      makeMove(move.x, move.y, 'white');
+      currentPlayer = 'black';
+      updateStatus();
+    }
+
+    function updateStatus() {
+      const blackMoves = getValidMoves('black');
+      const whiteMoves = getValidMoves('white');
+
+      if (blackMoves.length === 0 && whiteMoves.length === 0) {
+        endGame();
+      } else {
+        const msg = currentPlayer === 'black' ? '黒（あなた）の番です' : '白（CPU）の番です';
+        document.getElementById('status').textContent = msg;
+      }
+    }
+
+    function endGame() {
+      let black = 0, white = 0;
+      for (let row of board) {
+        for (let cell of row) {
+          if (cell === 'black') black++;
+          else if (cell === 'white') white++;
+        }
+      }
+
+      let result = `ゲーム終了！ 黒: ${black} 白: ${white} → `;
+      if (black > white) result += 'あなたの勝ち！';
+      else if (white > black) result += 'CPUの勝ち！';
+      else result += '引き分け！';
+
+      document.getElementById('status').textContent = result;
+    }
+
+    initBoard();
+  </script>
+</body>
+</html>
