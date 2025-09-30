@@ -1,2 +1,2 @@
-- Reversi: https://kyoya-p.github.io/reversi.html
+- Reversi(by Gemini): https://kyoya-p.github.io/reversi.html
 - Markdown Table Editor: https://kyoya-p.github.io/TextGridField-v4/index.html
